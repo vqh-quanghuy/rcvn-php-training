@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CustomersImport;
 
 class CustomerController extends Controller
 {
@@ -132,5 +134,19 @@ class CustomerController extends Controller
             'status' => true,
             'message' => 'Updated',
         ], Response::HTTP_ACCEPTED);
+    }
+
+    public function uploadCSV(Request $request)
+    {   
+        if(!is_null($request->file('import_customers'))) {
+            // dd("here");
+            Excel::import(new CustomersImport, $request->file('import_customers'));
+            
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid Inputs',
+            ], Response::HTTP_BAD_REQUEST);
+        }
     }
 }
