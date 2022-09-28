@@ -1,0 +1,45 @@
+# FE Ignore files
+
+fe-rcvn-training/.DS_Store
+fe-rcvn-training/node_modules
+fe-rcvn-training/dist
+
+
+# local env files
+fe-rcvn-training/.env.local
+fe-rcvn-training/.env.*.local
+
+# Log files
+fe-rcvn-training/npm-debug.log*
+fe-rcvn-training/yarn-debug.log*
+fe-rcvn-training/yarn-error.log*
+fe-rcvn-training/pnpm-debug.log*
+
+# Editor directories and files
+fe-rcvn-training/.idea
+fe-rcvn-training/.vscode
+fe-rcvn-training/*.suo
+fe-rcvn-training/*.ntvs*
+fe-rcvn-training/*.njsproj
+fe-rcvn-training/*.sln
+fe-rcvn-training/*.sw?
+
+# BE Ignore files
+
+be-rcvn-training/node_modules
+be-rcvn-training/public/build
+be-rcvn-training/public/hot
+be-rcvn-training/public/storage
+be-rcvn-training/public/images
+be-rcvn-training/storage/*.key
+be-rcvn-training/vendor
+be-rcvn-training/.env
+be-rcvn-training/.env.backup
+be-rcvn-training/.phpunit.result.cache
+be-rcvn-training/Homestead.json
+be-rcvn-training/Homestead.yaml
+be-rcvn-training/auth.json
+be-rcvn-training/npm-debug.log
+be-rcvn-training/yarn-error.log
+be-rcvn-training/.idea
+be-rcvn-training/.vscode
