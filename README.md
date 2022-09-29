@@ -69,7 +69,6 @@ Sử dụng pgAdmin hoặc phpmyadmin để tạo mới Database rỗng **"rcvn_
 ```sh
 cd be-rcvn-training
 cp .env.example .env
-nano .env
 ```
 Dùng Nano hoặc Vim hoặc text editor bất kỳ để cập nhật thông tin môi trường
 
@@ -123,6 +122,14 @@ Cài đặt npm
 ```sh
 npm install
 ```
+
+Trường hợp backend sử dụng port khác với port {8000}, cần dùng nano để điều chỉnh Url API của source back-end tại file src/main.js
+
+```javascript
+Vue.prototype.$backendUrl = 'http://127.0.0.1:{port}/api/';
+Vue.prototype.$backendImageUrl = 'http://127.0.0.1:{port}/images/';
+```
+
 Chạy dự án
 ```sh
 npm run serve
