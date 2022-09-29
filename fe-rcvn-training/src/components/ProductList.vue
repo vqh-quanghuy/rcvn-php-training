@@ -93,18 +93,22 @@
                         <v-col cols="12" sm="12" md="12" >
                           <template 
                             v-if="editedItem.product_image !== null && editedItem.product_image.length > 0">
-                            <v-row>
-                              <v-col cols="12" sm="12" md="6" >
+                            <v-row align="center">
+                              <v-col cols="12" sm="12" md="12" >
                                 <v-img
                                   max-height="200"
                                   max-width="200"
-                                  :src="`http://127.0.0.1:8000/images/`+editedItem.product_image"
+                                  class="mx-auto"
+                                  :src="backendImageUrl+editedItem.product_image"
+                                  v-if="!isRemovedImage"
                                 ></v-img>
                               </v-col>
-                              <v-col cols="12" sm="12" md="6" >
+                            </v-row>
+                            <v-row>
+                              <v-col cols="12" sm="12" md="12" >
                                 <v-checkbox
                                   v-model="isRemovedImage"
-                                  label="Xóa ảnh"
+                                  label="Cập nhật ảnh"
                                   :error-messages="editedItemErrors.is_removed_image"
                                 ></v-checkbox>
                               </v-col>
@@ -113,6 +117,7 @@
                           <v-file-input
                             accept="image/png, image/jpeg, image/jpg"
                             prepend-icon="mdi-camera"
+                            v-if="isRemovedImage || editedItem.product_image === null || editedItem.product_image === ''"
                             label="Cập nhật hình ảnh sản phẩm"
                             id="product_image"
                             v-model="editedProductImage"
@@ -128,7 +133,7 @@
                             prepend-icon="mdi-camera"
                             label="Hình ảnh sản phẩm"
                             id="product_image"
-                            v-model="editedProductImage"
+                            v-model="editedItem.product_image"
                             :error-messages="editedItemErrors.product_image"
                             show-size
                           ></v-file-input>
@@ -220,7 +225,7 @@
           <v-img
             max-height="250"
             max-width="250"
-            :src="`http://127.0.0.1:8000/images/`+item.product_image"
+            :src="backendImageUrl+item.product_image"
           ></v-img>
         </v-menu>
       </template>
@@ -365,7 +370,7 @@ export default {
         (v) => /^\d*\.?\d*$/.test(v) || "Giá bán phải là số.",
       ],
       statusRules: [
-        v => Number.isInteger(Number(v)) || 'Trạng thái không được để trống.',
+        v => Number.isInteger(v!== null ? Number(v) : '') || 'Trạng thái không được để trống.',
       ],
 
       apiHeaders: {
@@ -373,6 +378,7 @@ export default {
         "Accept": "application/json",
         "Authorization": "Bearer " + sessionStorage.getItem("access_token"),
       },
+      backendImageUrl: '',
     };
   },
   methods: {
@@ -454,7 +460,7 @@ export default {
       let formData = new FormData();
       formData.append('product_name', editedItem.product_name);
       formData.append('product_price', editedItem.product_price);
-      formData.append('description', editedItem.description);
+      formData.append('description', editedItem.description !== null ? editedItem.description : '');
       formData.append('is_sale', editedItem.is_sale);
 
 
@@ -466,7 +472,7 @@ export default {
         } else {
           formData.append('product_image', '');
         }
-
+        console.log('this.isRemovedImage :>> ', this.isRemovedImage);
         formData.append('is_removed_image', this.isRemovedImage ? 1 : 0);
 
         await this.$axios
@@ -488,6 +494,7 @@ export default {
           });
       } else {
         // Call to Create axios
+        // console.log('editedItem.prouduct_image :>> ', editedItem.product_image);
         formData.append('product_image', editedItem.product_image ? editedItem.product_image : '');
         await this.$axios
           .post(
@@ -536,6 +543,7 @@ export default {
     },
   },
   mounted() {
+    this.backendImageUrl = this.$backendImageUrl
     this.load(this.page, this.itemsPerPage);
   },
 };

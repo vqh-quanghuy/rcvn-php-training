@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -86,7 +87,6 @@ class ProductController extends Controller
             $image->move($destinationPath, $productImage);
         }
 
-
         $item = new Product();
         $item->product_name = $request->product_name;
         $item->product_image = $request->product_image;
@@ -130,10 +130,18 @@ class ProductController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
         $inputs = $request->post();
+        // dd($product->product_id);
+        $oldImage = DB::table('products')->select('product_image')->where('product_id', $product->product_id)->first();
+        $oldDestinationPath = 'images/'.$oldImage->product_image;
 
         if($request->input('is_removed_image')) {
+            // dd("test");
             $inputs['product_image'] = '';
+            if(file_exists($oldDestinationPath) && is_file($oldDestinationPath)) unlink($oldDestinationPath);
+        } else {
+            $inputs['product_image'] = $oldImage->product_image;
         }
+
         if ($image = $request->file('product_image')) {
             $destinationPath = 'images/';
             $productImage = date('YmdHis') . "." . $image->getClientOriginalExtension();

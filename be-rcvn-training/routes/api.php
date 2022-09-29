@@ -35,7 +35,8 @@ Route::prefix('user')->group(function () {
         // Customers Management
         Route::resource('/customers', CustomerController::class)->except(['create', 'edit', 'show', 'destroy']);
         Route::get('/customers/{customer}', [CustomerController::class, 'detail']);
-        Route::post('/customers/import', [CustomerController::class, 'uploadCSV']);
+        Route::post('/customers-import', [CustomerController::class, 'uploadCSV']);
+        Route::get('/customers-export', [CustomerController::class, 'exportCSV']);
 
         // Products Management
         Route::resource('/products', ProductController::class)->except(['create', 'edit', 'show']);

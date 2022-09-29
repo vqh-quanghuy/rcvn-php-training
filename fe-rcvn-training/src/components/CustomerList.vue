@@ -167,6 +167,68 @@
               </v-card-actions>
             </v-card>
           </v-dialog>
+          <v-dialog v-model="dialogImport" max-width="600px">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="success" dark class="mb-2 mx-2" v-bind="attrs" v-on="on">
+                Import CSV
+              </v-btn>
+            </template>
+            <v-card>
+              <v-card-title>
+                <span class="text-h5">Chọn file để tiến hành nhập dữ liệu</span>
+              </v-card-title>
+              <v-alert
+                class="mx-2 error--text"
+                v-model="alertImport"
+                dismissible
+                color="error"
+                border="left"
+                elevation="1"
+                colored-border
+                icon="mdi-alert-outline"
+                @input="closeAlertImport()"
+              >
+                <b>{{alertMesgImport}}</b> <br>
+                <ul v-for="(valueHead, indexHead) in alertErrorsHead" :key="indexHead">
+                  <li style="text-align: left" v-if="valueHead === 'row'">Lỗi ở <b>dòng {{alertErrors['row']}}</b></li>
+                  <li style="text-align: left" v-else>
+                    <b>{{valueHead}}</b>
+                    <ul v-for="(valueSub, indexSub) in alertErrors[valueHead]" :key="indexSub">
+                      <li style="text-align: left">{{valueSub}}</li>
+                    </ul>
+                  </li>
+                </ul>
+              </v-alert>
+              <v-card-text>
+                <v-container>
+                  <v-form ref="importForm">
+                    <v-row>
+                      <v-col cols="12" sm="12" md="12">
+                        <v-file-input
+                          accept="text/csv"
+                          label="Nhập file CSV"
+                          id="csv_file"
+                          :rules="csvFileRules"
+                          validate-on-blur
+                          v-model="customerCSV"
+                          show-size
+                        ></v-file-input>
+                      </v-col>
+                    </v-row>
+                  </v-form>
+                </v-container>
+              </v-card-text>
+
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="secondary" text @click="closeDialogImport">Hủy</v-btn>
+                <v-btn color="primary" text @click="uploadCSV">Nhập</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+          <v-btn color="accent" dark class="mb-2" @click="exportCSV">
+            EXPORT EXCEL
+          </v-btn>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
@@ -233,9 +295,15 @@ export default {
     return {
       customers: {},
       dialog: false,
+      dialogImport: false,
       alert: false,
       alertMesg: '',
       alertType: '',
+      alertImport: false,
+      alertMesgImport: '',
+      customerCSV: [],
+      alertErrors: [],
+      alertErrorsHead: [],
       headers: [
         { text: "#", value: "index", width: "5%" },
         { text: "Họ tên", align: "start", value: "customer_name", width: "20%" },
@@ -304,24 +372,20 @@ export default {
       ],
       emailRules: [
         (v) => !!v || "Email không được để trống.",
-        (v) =>
-          (v && v.length <= 255) || "Email must be less than 255 characters.",
+        (v) => (v && v.length <= 255) || "Email phải ít hơn 255 ký tự.",
         (v) =>
           /^(([^<>()[\]\\.,;:\s@']+(\.[^<>()\\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
             v
-          ) || "E-mail không đúng định dạng.",
+          ) || "Email không đúng định dạng.",
       ],
       passwordRules: [
         (v) => !!v || "Nhập mật khẩu.",
-        (v) =>
-          (v && v.length >= 8) || "Mật khẩu phải lớn hơn 8 ký tự.",
+        (v) => (v && v.length >= 8) || "Mật khẩu phải lớn hơn 8 ký tự.",
       ],
       passwordConfirmRules: [
         (v) => !!v || "Xác nhận mật khẩu",
-        (v) =>
-          (v && v.length >= 8) || "Mật khẩu xác nhận phải lớn hơn 8 ký tự.",
-        (v) =>
-          v === this.editedItem.password || "Xác nhận mật khẩu không khớp.",
+        (v) => (v && v.length >= 8) || "Mật khẩu xác nhận phải lớn hơn 8 ký tự.",
+        (v) => v === this.editedItem.password || "Xác nhận mật khẩu không khớp.",
       ],
       addressRules: [
         (v) => !!v || "Địa chỉ không được để trống",
@@ -330,10 +394,11 @@ export default {
           "Địa chỉ phải ít hơn 255 ký tự.",
       ],
       telNumRules: [
-        (v) => !!v || "Điện thoại không được để trống",
-        (v) =>
-          (v && v.length <= 14) ||
-          "Số điện thoại phải ít hơn 14 số.",
+        (v) => !!v || "Điện thoại không được để trống.",
+        (v) => (v && v.length <= 14) || "Số điện thoại phải ít hơn 14 số.",
+      ],
+      csvFileRules: [
+        (v) => !!v || "File CSV không được để trống."
       ],
 
       apiHeaders: {
@@ -387,6 +452,14 @@ export default {
       this.alertMesg = '';
       this.alertType = '';
       this.dialog = false;
+    },
+
+    closeDialogImport() {
+      this.$refs.importForm.reset();
+      this.alertMesgImport = '';
+      this.alertImport = false;
+      this.alertErrors = [];
+      this.dialogImport = false;
     },
 
     async save() {
@@ -451,9 +524,77 @@ export default {
           });
       }
     },
+    checkCSVExtension(fname) {
+      return fname.split('.').pop() === 'csv' ? true : false;
+    },
+    async uploadCSV() {
+      if (!this.$refs.importForm.validate()) return;
+
+      let customerCSV = this.customerCSV;
+      let formData = new FormData();
+      if(customerCSV instanceof File && this.checkCSVExtension(customerCSV.name)) {
+        formData.append('import_customers', customerCSV)
+        await this.$axios
+          .post(`${this.$backendUrl}user/customers-import/`, formData, {
+            headers: this.apiHeaders,
+          }
+        )
+        .then(res => {
+          alert(res.data.message);
+          this.load(this.page, this.itemsPerPage);
+          this.closeDialogImport();
+        })
+        .catch(err => {
+          this.alertImport = true;
+          this.alertMesgImport = err.response.data.message;
+          this.alertErrors = err.response.data.error;
+          this.alertErrorsHead = Object.keys(this.alertErrors);
+        })
+      }
+
+    },
+    async exportCSV() {
+      await this.$axios
+      .get(`${this.$backendUrl}user/customers-export/`, {
+        headers: this.apiHeaders,
+        params: {
+          per_page: this.itemsPerPage,
+          name: this.searchItem.customer_name,
+          email: this.searchItem.customer_email,
+          customer_status: this.searchItem.customer_status,
+          address: this.searchItem.customer_address,
+        },
+      })
+      .then((res) => {
+        // console.log('res :>> ', res);
+        const today = new Date();
+        let date = today.getFullYear() + "" + (today.getMonth()+1) + "" + today.getDate();
+        let time = today.getHours() + "h" + today.getMinutes();
+
+        const blob = new Blob([res.data], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.setAttribute('href', url)
+        a.setAttribute('download', `customer_${date}_${time}.csv`);
+        a.click()
+      })
+      .catch((err) => {
+        console.log('err :>> ', err);
+      });
+    },
     clearEmailErrors() {
       this.editedItemErrors.email = [];
     },
+    closeAlert() {
+      this.alert = false;
+      this.alertMesg = '';
+      this.alertType = '';
+    },
+    closeAlertImport() {
+      this.alertImport = false;
+      this.alertMesgImport = '';
+      this.alertErrors = [];
+    }
   },
   computed: {
     formTitle() {

@@ -10,16 +10,12 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CustomersImport;
+use App\Exports\CustomersExport;
 
 class CustomerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
+    
+    private function searchParams() {
         // Get Params from search 
         $customerName = \Request::get('name') ?: null;
         $customerEmail = \Request::get('email') ?: null;
@@ -52,13 +48,26 @@ class CustomerController extends Controller
         }
 
         $per_page = intval(\Request::get('per_page')) ?: 10;
+
+        return [
+            'customerName' => $customerName,
+            'customerEmail' => $customerEmail,
+            'customerStatus' => $customerStatus,
+            'customerAddress' => $customerAddress,
+            'perPage' => $per_page,
+        ];
+    }
+
+    public function index()
+    {
+        $params = $this->searchParams();
         $customers = Customer::orderBy('created_at', 'desc');
-        if(!empty($customerName)) $customers = $customers->where('customer_name', 'like', "%{$customerName}%");
-        if(!empty($customerEmail)) $customers = $customers->where('email', 'like', "%{$customerEmail}%");
-        if(!is_null($customerStatus)) $customers = $customers->where('is_active', $customerStatus);
-        if(!empty($customerAddress)) $customers = $customers->where('address', 'like', "%{$customerAddress}%");
+        if(!empty($params['customerName'])) $customers = $customers->where('customer_name', 'like', "%{$params['customerName']}%");
+        if(!empty($params['customerEmail'])) $customers = $customers->where('email', 'like', "%{$params['customerEmail']}%");
+        if(!is_null($params['customerStatus'])) $customers = $customers->where('is_active', $params['customerStatus']);
+        if(!empty($params['customerAddress'])) $customers = $customers->where('address', 'like', "%{$params['customerAddress']}%");
         
-        $customers = $customers->paginate($per_page);
+        $customers = $customers->paginate($params['perPage']);
 
         return response()->json([
             'status' => true,
@@ -137,16 +146,50 @@ class CustomerController extends Controller
     }
 
     public function uploadCSV(Request $request)
-    {   
+    {
         if(!is_null($request->file('import_customers'))) {
             // dd("here");
-            Excel::import(new CustomersImport, $request->file('import_customers'));
-            
+            try {
+                Excel::queueImport(new CustomersImport, $request->file('import_customers'));
+            } catch(\Maatwebsite\Excel\Validators\ValidationException $e) {
+                $failures = $e->failures();
+                $errors = [];
+                foreach ($failures as $failure) {
+                    if(count($errors) > 0) {
+                        if(array_key_exists($failure->attribute(), $errors)) {
+                            array_push($errors[$failure->attribute()], $failure->errors());
+                        } else {
+                            $errors[$failure->attribute()] = $failure->errors();
+                        }
+                    } else {
+                        $errors = [
+                            'row' => $failure->row(),
+                            $failure->attribute() => $failure->errors(),
+                        ];
+                    }
+                }
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid Inputs',
+                    'error' => $errors,
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            return response()->json([
+                'status' => true,
+                'message' => 'Import successful',
+            ], Response::HTTP_CREATED);
         } else {
             return response()->json([
                 'status' => false,
                 'message' => 'Invalid Inputs',
             ], Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    public function exportCSV()
+    {
+        $params = $this->searchParams();
+
+        return (new CustomersExport($params));
     }
 }
