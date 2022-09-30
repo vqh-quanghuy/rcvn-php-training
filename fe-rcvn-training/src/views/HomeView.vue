@@ -17,21 +17,36 @@
         <template v-slot:extension>
           <v-tabs v-model="tab" align-with-title show-arrows >
             <v-tabs-slider color="yellow"></v-tabs-slider>
-            <v-tab href="#tab-1"> Sản phẩm </v-tab>
-            <v-tab href="#tab-2"> Khách hàng </v-tab>
-            <v-tab href="#tab-3"> Users </v-tab>
+            <v-tab href="#tab-1"> 
+              <v-icon left>
+              mdi-package-variant-closed
+              </v-icon>
+              Sản phẩm 
+            </v-tab>
+            <v-tab href="#tab-2">
+              <v-icon left>
+              mdi-account-group
+              </v-icon>
+              Khách hàng
+            </v-tab>
+            <v-tab href="#tab-3">
+              <v-icon left>
+              mdi-face-agent
+              </v-icon>
+              Users
+            </v-tab>
           </v-tabs>
         </template>
       </v-app-bar>
       <v-tabs-items v-model="tab" style="margin-top: 100px">
         <v-tab-item value="tab-1">
-          <ProductList />
+          <ProductList @unauthenticated="backToLogin()" />
         </v-tab-item>
         <v-tab-item value="tab-2">
-          <CustomerList />
+          <CustomerList @unauthenticated="backToLogin()" />
         </v-tab-item>
         <v-tab-item value="tab-3">
-          <UserList />
+          <UserList @unauthenticated="backToLogin()" />
         </v-tab-item>
       </v-tabs-items>
     </v-container>
@@ -81,6 +96,12 @@ export default {
           console.log(err);
         });
     },
+    backToLogin() {
+      alert("Token expired, Please login again!!")
+      sessionStorage.removeItem("access_token");
+      sessionStorage.removeItem("user_info");
+      this.$router.push("login");
+    }
   },
   computed: {
     userName() {

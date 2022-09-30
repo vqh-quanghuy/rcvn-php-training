@@ -60,7 +60,7 @@
         <v-toolbar
           flat
         >
-        <v-toolbar-title>List of Users</v-toolbar-title>
+        <v-toolbar-title>Danh sách User</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -418,7 +418,13 @@ export default {
         }
       })
       .catch(err => {
-        if (err.status !== 200) console.error(err.response.data.message);
+        if (err.status !== 200) {
+          console.error(err.response.data.message)
+          if(err.response.status === 401 && err.response.data.message === 'Unauthenticated.') {
+            console.log('123 :>> ');
+            this.$emit('unauthenticated')
+          }
+        }
       })
     },
 
