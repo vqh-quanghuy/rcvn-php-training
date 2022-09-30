@@ -15,7 +15,8 @@ class UserAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'password' => 'required|string|min:8'
+            'password' => 'required|string|min:8',
+            'remember' => 'required|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -25,12 +26,26 @@ class UserAuthController extends Controller
                 'error' => $validator->errors()
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+        $remember = $request->remember ? true : false;
 
-        if (Auth::attempt(['email'=>$request->email, 'password'=>$request->password])) {
+        // Get Client IP Address
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+
+        if (Auth::attempt(['email'=>$request->email, 'password'=>$request->password, 'is_active' => 1], $remember)) {
             /** @var \App\Models\User $user **/
             $user = Auth::user();
+            $user->last_login_ip = $ip;
+            $user->last_login_at = date('M d, Y H:i A', strtotime(now()));
+            $user->save();
             $token = $user->createToken('rcvn2012')->plainTextToken;
-            $minutes = 1440;
+            // $minutes = 1440; // 24 hours
+            $minutes = 60; // 1 hour
             $timestamp = now()->addMinute($minutes);
             $expires_at = date('M d, Y H:i A', strtotime($timestamp));
             return response()->json([

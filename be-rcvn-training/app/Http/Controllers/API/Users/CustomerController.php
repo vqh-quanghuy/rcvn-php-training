@@ -84,6 +84,8 @@ class CustomerController extends Controller
             'address' => 'required|string|max:255',
             'password' => 'required|string|confirmed|min:8',
             'is_active' => 'required|integer|between:0,1',
+        ], [
+            'email.unique' => 'Email đã được đăng ký.'
         ]);
 
         if ($validator->fails()) {
@@ -126,6 +128,8 @@ class CustomerController extends Controller
             'email' => 'required|string|email|max:255|unique:customers,email,'.$customer->customer_id.',customer_id',
             'address' => 'required|string|max:255',
             'is_active' => 'required|integer|between:0,1',
+        ], [
+            'email.unique' => 'Email đã được đăng ký.'
         ]);
 
         if ($validator->fails()) {

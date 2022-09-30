@@ -31,8 +31,18 @@
         </v-col>
       </v-row>
       <v-row class="flex-row-reverse">
-        <v-btn @click="clearSearch()" small color="secondary" class="mr-4">Xóa tìm</v-btn>
-        <v-btn @click="load()" small color="info" class="mr-4">Tìm kiếm</v-btn>
+        <v-btn @click="clearSearch()" small color="secondary" class="mr-4">
+          <v-icon left>
+            mdi-sort-variant-remove
+          </v-icon>
+          Xóa tìm
+        </v-btn>
+        <v-btn @click="load()" small color="info" class="mr-4">
+          <v-icon left>
+            mdi-archive-search-outline
+          </v-icon>
+          Tìm kiếm
+        </v-btn>
       </v-row>
     </v-form>
     <v-data-table
@@ -51,6 +61,9 @@
           <v-dialog v-model="dialog" max-width="600px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
+                <v-icon left>
+                  mdi-account-plus
+                </v-icon>
                 Thêm mới
               </v-btn>
             </template>
@@ -170,6 +183,9 @@
           <v-dialog v-model="dialogImport" max-width="600px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn color="success" dark class="mb-2 mx-2" v-bind="attrs" v-on="on">
+                <v-icon left>
+                  mdi-file-import
+                </v-icon>
                 Import CSV
               </v-btn>
             </template>
@@ -227,6 +243,9 @@
             </v-card>
           </v-dialog>
           <v-btn color="accent" dark class="mb-2" @click="exportCSV">
+            <v-icon left>
+              mdi-file-export
+            </v-icon>
             EXPORT EXCEL
           </v-btn>
         </v-toolbar>
@@ -235,7 +254,13 @@
         <v-icon medium class="mx-1" color="accent" @click="editItem(item)">mdi-pencil</v-icon>
       </template>
       <template v-slot:no-data>
-        <v-btn color="primary" @click="load"> Tải lại </v-btn>
+        <b>Không có dữ liệu</b><br>
+        <v-btn small color="info" class="mb-2" @click="load"> 
+          <v-icon left>
+            mdi-reload
+          </v-icon>
+          Tải lại
+        </v-btn>
       </template>
       <template v-slot:[`item.index`]="{ index }">
         {{ index + 1 }}
@@ -266,7 +291,7 @@
           hide-details
           :value="itemsPerPage"
           label="Số lượng hiển thị mỗi trang"
-          @change="itemsPerPage = parseInt($event, 10)"
+          @change="itemsPerPage = parseInt($event, 10), page = 1"
           :items="perPageChoices"
         >
         </v-select>
@@ -379,8 +404,12 @@ export default {
           ) || "Email không đúng định dạng.",
       ],
       passwordRules: [
-        (v) => !!v || "Nhập mật khẩu.",
-        (v) => (v && v.length >= 8) || "Mật khẩu phải lớn hơn 8 ký tự.",
+        v => !!v || "Nhập mật khẩu.",
+        v => (v && v.length >= 8) || "Mật khẩu phải lớn hơn 8 ký tự.",
+        v => (v && /\d/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự số.',
+        v => (v && /[A-Z]{1}/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự in hoa.',
+        v => (v && /[a-z]{1}/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự in thường.',
+        v => (v && /[^A-Za-z0-9]/.test(v)) || 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt.',
       ],
       passwordConfirmRules: [
         (v) => !!v || "Xác nhận mật khẩu",
