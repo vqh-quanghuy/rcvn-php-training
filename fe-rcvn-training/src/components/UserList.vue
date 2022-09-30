@@ -250,7 +250,7 @@
         Hiển thị từ {{users.from}} ~ {{users.to}} trên tổng số {{ users.total }} users
       </v-col>
     </v-row>
-    <v-row class="text-center px-4 align-center" wrap>
+    <v-row class="text-center px-4 align-center" wrap v-if="users.total > itemsPerPage">
       <v-col cols="12" md="7">
         <v-pagination
           v-model="page"

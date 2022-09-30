@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\CustomersImport;
 use App\Exports\CustomersExport;
+use Illuminate\Validation\Rules\Password;
 
 class CustomerController extends Controller
 {
@@ -82,7 +83,12 @@ class CustomerController extends Controller
             'tel_num' => 'required|string|max:14',
             'email' => 'required|string|email|max:255|unique:customers',
             'address' => 'required|string|max:255',
-            'password' => 'required|string|confirmed|min:8',
+            'password' => [
+                'required',
+                'string',
+                'confirmed', 
+                Password::min(8)->letters()->mixedCase()->numbers()->symbols()
+            ],
             'is_active' => 'required|integer|between:0,1',
         ], [
             'email.unique' => 'Email đã được đăng ký.'

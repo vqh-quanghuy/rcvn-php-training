@@ -41,7 +41,8 @@ class UserAuthController extends Controller
             /** @var \App\Models\User $user **/
             $user = Auth::user();
             $user->last_login_ip = $ip;
-            $user->last_login_at = date('M d, Y H:i A', strtotime(now()));
+            // $user->last_login_at = date('M d, Y H:i A', strtotime(now()));
+            $user->last_login_at = now();
             $user->save();
             $token = $user->createToken('rcvn2012')->plainTextToken;
             // $minutes = 1440; // 24 hours

@@ -271,7 +271,7 @@
         Hiển thị từ {{products.from}} ~ {{products.to}} trên tổng số {{ products.total }} sản phẩm
       </v-col>
     </v-row>
-    <v-row class="text-center px-4 align-center" wrap>
+    <v-row class="text-center px-4 align-center" wrap v-if="products.total > itemsPerPage">
       <v-col cols="12" md="7">
         <v-pagination v-model="page" :length="products.last_page">
         </v-pagination>

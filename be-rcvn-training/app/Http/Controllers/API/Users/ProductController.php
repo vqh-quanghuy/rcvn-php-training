@@ -130,12 +130,10 @@ class ProductController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
         $inputs = $request->post();
-        // dd($product->product_id);
         $oldImage = DB::table('products')->select('product_image')->where('product_id', $product->product_id)->first();
         $oldDestinationPath = 'images/'.$oldImage->product_image;
 
         if($request->input('is_removed_image')) {
-            // dd("test");
             $inputs['product_image'] = '';
             if(file_exists($oldDestinationPath) && is_file($oldDestinationPath)) unlink($oldDestinationPath);
         } else {

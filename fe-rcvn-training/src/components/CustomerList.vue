@@ -279,7 +279,7 @@
         Hiển thị từ {{customers.from}} ~ {{customers.to}} trên tổng số {{ customers.total }} khách hàng
       </v-col>
     </v-row>
-    <v-row class="text-center px-4 align-center" wrap>
+    <v-row class="text-center px-4 align-center" wrap v-if="customers.total > itemsPerPage">
       <v-col cols="12" md="7">
         <v-pagination v-model="page" :length="customers.last_page">
         </v-pagination>
